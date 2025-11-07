@@ -72,6 +72,8 @@ class AssetInfolist
                                         class="bg-black object-cover"
                                         preload="metadata"
                                         muted
+                                        playsinline
+                                        controls
                                     ></video>
                                 </div>');
                                 break;
