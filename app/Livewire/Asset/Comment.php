@@ -141,7 +141,7 @@ class Comment extends Component implements HasForms, HasActions
             <div class="min-h-16 bg-gray-900/10 dark:bg-gray-50/10 p-4 rounded-lg">
                 <div class="flex items-center gap-4 mb-4">
                     <div>
-                        <x-filament-panels::avatar.user size="w-16 h-16" :user="auth()->user()" loading="lazy" />
+                        <x-filament-panels::avatar.user size="w-16 h-16" :user="$comment->user" loading="lazy" />
                     </div>
                     <div>
                         <div>
