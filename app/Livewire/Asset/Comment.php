@@ -145,7 +145,7 @@ class Comment extends Component implements HasForms, HasActions
                     </div>
                     <div>
                         <div>
-                            {{ auth()->user()->name }}
+                            {{ $comment->user->name }}
                             @if( $comment->user_id === auth()->id() )
                                 @if( $this->toggleEdit->isVisible() )
                                     {{ $this->toggleEdit }}
