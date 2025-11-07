@@ -79,7 +79,7 @@ class Video extends Component implements HasActions, HasForms
                             preload="metadata"
                             muted
                             playsinline
-                            no-controls
+                            controls
                         ></video>
                     </div>
                     <div class="text-center max-w-full truncate">
