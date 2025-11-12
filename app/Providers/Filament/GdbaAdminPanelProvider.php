@@ -56,7 +56,8 @@ class GdbaAdminPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->plugins([
-                FilamentShieldPlugin::make(),
+                FilamentShieldPlugin::make()
+                    ->globallySearchable(false),
                 GdbaOidcPlugin::make(),
             ])
             ->authMiddleware([

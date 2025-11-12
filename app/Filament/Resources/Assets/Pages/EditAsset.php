@@ -4,9 +4,10 @@ namespace App\Filament\Resources\Assets\Pages;
 
 use App\Filament\Pages\AssetManagement;
 use App\Filament\Resources\Assets\AssetResource;
-use Filament\Actions\DeleteAction;
+use Filament\Actions\Action;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
+use Storage;
 
 class EditAsset extends EditRecord
 {
@@ -15,7 +16,17 @@ class EditAsset extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            $this->getSaveFormAction()
+                ->formId('form'),
             ViewAction::make(),
+            Action::make('download')
+                ->label('Download')
+                ->icon('heroicon-o-cloud-arrow-down')
+                ->color('success')
+                ->url(function () {
+                    $record = $this->getRecord();
+                    return url(Storage::url($record->path));
+                })
 //            DeleteAction::make(),
         ];
     }

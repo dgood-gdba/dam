@@ -22,8 +22,27 @@ class AssetResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
+//    protected static bool $isGloballySearchable = true;
+
     protected static ?string $recordTitleAttribute = 'file_name';
     protected static bool $shouldRegisterNavigation = false;
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return [
+            'file_name',
+            'path',
+            'tags.name'
+        ];
+    }
+
+    public static function getGlobalSearchResultDetails(\Illuminate\Database\Eloquent\Model $record): array
+    {
+        return [
+            'File Name' => $record->file_name,
+            'Tags' => implode(', ',$record->tags->pluck('name')->toArray()),
+        ];
+    }
 
     public static function form(Schema $schema): Schema
     {

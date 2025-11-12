@@ -17,7 +17,7 @@ use Livewire\Component;
 
 class Image extends Component implements HasActions, HasForms
 {
-    use InteractsWithActions, InteractsWithForms;
+    use InteractsWithActions, InteractsWithForms, PreviewActionsTrait;
 
     public ?Asset $asset;
     public ?Directory $directory;
@@ -90,6 +90,7 @@ class Image extends Component implements HasActions, HasForms
             >
                 <div class="py-1" @click="closeMenu()">
                     {{ $this->edit }}
+                    {{ $this->download }}
                     {{ $this->delete }}
                 </div>
             </div>
@@ -99,45 +100,4 @@ class Image extends Component implements HasActions, HasForms
         HTML;
     }
 
-    #[On('editFile')]
-    public function editFile(): void
-    {
-        redirect(AssetResource::getUrl('view', ['record' => $this->asset]));
-    }
-
-    public function editAction(): Action
-    {
-        return Action::make('edit')
-            ->label('Quick Edit Image')
-            ->schema([
-                TextInput::make('name')
-                    ->label('File Name'),
-                SpatieTagsInput::make('tags'),
-            ])
-            ->extraAttributes([
-                'class' => 'w-full rounded-none text-black dark:text-white bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-800 text-left '
-            ])
-            ->action(function ($data) {
-                dd($data);
-            });
-    }
-
-    public function deleteAction(): Action
-    {
-        return Action::make('delete')
-            ->label('Delete Image')
-            ->requiresConfirmation()
-            ->extraAttributes([
-                'class' => 'w-full rounded-none text-left '
-            ])
-            ->color('danger')
-            ->action(function () {
-                //We need to load this somehow now...
-
-                \Storage::disk('public')->delete($this->asset->path);
-                $this->asset->delete();
-
-                $this->dispatch('refresh');
-            });
-    }
 }

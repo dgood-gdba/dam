@@ -353,8 +353,121 @@ class AssetManagement extends Page implements HasForms
 
     public function setContextDirectoryId(?int $directoryId): void
     {
-        dump($directoryId);
         $this->directoryIdContextMenu = $directoryId;
+    }
+
+    public function topMakeDirectoryAction(): Action
+    {
+        return Action::make('topMakeDirectory')
+            ->schema([
+                TextInput::make('name')
+            ])
+            ->color('success')
+            ->label('New Directory')
+            ->icon('heroicon-s-folder-plus')
+            ->extraAttributes([
+                'class' => 'rounded-r-none'
+            ])
+            ->action(function ($data) {
+                $directory = new Directory();
+                $directory->name = $data['name'];
+                $directory->parent_id = $this->directory;
+                $directory->save();
+
+                //Emit event to close context menu
+                $this->dispatch('closeContext');
+                $this->reload();
+            });
+    }
+
+    public function topUploadAssetAction(): Action
+    {
+        $path = '';
+        foreach ($this->breadcrumbs as $breadcrumb) {
+            $path .= $breadcrumb['name'] . DIRECTORY_SEPARATOR;
+        }
+
+        return Action::make('topUploadAsset')
+            ->label('Upload Asset')
+            ->icon('heroicon-o-cloud-arrow-up')
+            ->extraAttributes([
+                'class' => 'rounded-l-none'
+            ])
+            ->color('warning')
+            ->schema([
+                FileUpload::make('file')
+                    ->preserveFilenames()
+                    ->disk('public')
+                    ->directory($path),
+                TextInput::make('name')
+                    ->label('File Name')
+                    ->hint('Leave blank to use the original file name'),
+                SpatieTagsInput::make('tags')->label('Tags')
+                    ->dehydrated(true),
+            ])
+            ->action(function ($data, \Filament\Actions\Action $action) {
+                $path = '';
+                foreach ($this->breadcrumbs as $breadcrumb) {
+                    $path .= $breadcrumb['name'] . DIRECTORY_SEPARATOR;
+                }
+
+                $fileData = pathinfo(\Storage::disk('public')->path($data['file']));
+                $extension = $fileData['extension'];
+
+                $updateFileName = true;
+                if (empty($data['name'])) {
+                    $data['name'] = $fileData['filename'];
+                    $updateFileName = false;
+                }
+
+                $safeName = $data['name'];
+                $numberModifier = 1;
+                while (Asset::query()->where('directory_id', $this->directory)->where('file_name', $safeName)->exists()) {
+                    $safeName = $data['name'] . '(' . $numberModifier . ')';
+                    $numberModifier++;
+                    $updateFileName = true;
+                }
+                $data['name'] = $safeName;
+
+                if ($updateFileName) {
+                    $storage = Storage::disk('public');
+                    $oldPath = $data['file'];
+                    $newPath = $path . $data['name'] . '.' . $extension;
+                    if ($storage->exists($oldPath)) {
+                        $storage->move($oldPath, $newPath);
+                        $data['file'] = $newPath;
+                    }
+                }
+
+                $asset = new Asset();
+                $asset->directory_id = $this->directory;
+                $asset->file_name = $data['name'];
+                $asset->extension = $extension;
+                $asset->path = $data['file'];
+
+                // Get file information
+                //$storage = \Illuminate\Support\Facades\Storage::disk('public');
+                $asset->file_size = \Storage::disk('public')->size($data['file']);
+                $asset->mime_type = \Storage::disk('public')->mimeType($data['file']);
+
+                if (str_starts_with($asset->mime_type, 'image/')) {
+                    $asset->file_type = 'image';
+                } elseif (str_starts_with($asset->mime_type, 'video/')) {
+                    $asset->file_type = 'video';
+                } elseif (str_starts_with($asset->mime_type, 'audio/')) {
+                    $asset->file_type = 'audio';
+                } else {
+                    $asset->file_type = 'document';
+                }
+                $asset->save();
+
+                $asset->attachTags($data['tags']);
+
+                //Emit event to close context menu
+                $this->dispatch('closeContext');
+                $this->reload();
+            });
+
     }
 
     public function makeDirectoryAction(): Action

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Assets\Pages;
 use App\Filament\Pages\AssetManagement;
 use App\Filament\Resources\Assets\AssetResource;
 use App\Models\Directory;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 
@@ -16,6 +17,14 @@ class ViewAsset extends ViewRecord
     {
         return [
             EditAction::make(),
+            Action::make('download')
+                ->label('Download')
+                ->icon('heroicon-o-cloud-arrow-down')
+                ->color('success')
+                ->url(function () {
+                    $record = $this->getRecord();
+                    return url(\Storage::url($record->path));
+                })
         ];
     }
 

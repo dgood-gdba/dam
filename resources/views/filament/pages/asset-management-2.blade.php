@@ -50,6 +50,10 @@
                 </nav>
 
                 <div class="flex">
+
+                    {{ $this->topMakeDirectory }}
+                    {{ $this->topUploadAsset }}
+                    <div>&nbsp;&nbsp;&nbsp;</div>
                     <x-filament::modal slide-over id="filters">
                         <x-slot name="trigger">
                             <x-filament::button
