@@ -52,6 +52,7 @@
                 <div class="flex">
 
                     {{ $this->topMakeDirectory }}
+                    {{ $this->massUploadAction }}
                     {{ $this->topUploadAsset }}
                     <div>&nbsp;&nbsp;&nbsp;</div>
                     <x-filament::modal slide-over id="filters">

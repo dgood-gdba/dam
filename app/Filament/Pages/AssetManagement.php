@@ -577,6 +577,77 @@ class AssetManagement extends Page implements HasForms
             });
     }
 
+    public function massUploadAction(): Action
+    {
+        $path = '';
+        foreach ($this->breadcrumbs as $breadcrumb) {
+            $path .= $breadcrumb['name'] . DIRECTORY_SEPARATOR;
+        }
+
+        return Action::make('massUpload')
+            ->schema([
+                FileUpload::make('file')
+                    ->preserveFilenames()
+                    ->disk('public')
+                    ->multiple()
+                    ->directory($path),
+            ])
+            ->extraAttributes([
+                'class' => 'rounded-none'
+            ])
+            ->color('secondary')
+            ->action(function ($data, \Filament\Actions\Action $action) {
+                $path = '';
+
+
+                foreach ($this->breadcrumbs as $breadcrumb) {
+                    $path .= $breadcrumb['name'] . DIRECTORY_SEPARATOR;
+                }
+
+                foreach ($data['file'] as $file) {
+                    $fileData = pathinfo(\Storage::disk('public')->path($file));
+
+                    $safeName = $fileData['filename'];
+                    $fileName = $fileData['filename'];
+                    $extension = $fileData['extension'];
+                    $updateFileName = false;
+
+                    $numberModifier = 1;
+                    while (Asset::query()->where('directory_id', $this->directory)->where('file_name', $safeName)->exists()) {
+                        $safeName = $fileName . '(' . $numberModifier . ')';
+                        $numberModifier++;
+                        $updateFileName = true;
+                    }
+
+                    $asset = new Asset();
+                    $asset->directory_id = $this->directory;
+                    $asset->file_name = $safeName;
+                    $asset->extension = $extension;
+                    $asset->path = $file;
+
+                    // Get file information
+                    //$storage = \Illuminate\Support\Facades\Storage::disk('public');
+                    $asset->file_size = \Storage::disk('public')->size($file);
+                    $asset->mime_type = \Storage::disk('public')->mimeType($file);
+
+                    if (str_starts_with($asset->mime_type, 'image/')) {
+                        $asset->file_type = 'image';
+                    } elseif (str_starts_with($asset->mime_type, 'video/')) {
+                        $asset->file_type = 'video';
+                    } elseif (str_starts_with($asset->mime_type, 'audio/')) {
+                        $asset->file_type = 'audio';
+                    } else {
+                        $asset->file_type = 'document';
+                    }
+                    $asset->save();
+                }
+
+                //Emit event to close context menu
+                $this->dispatch('closeContext');
+                $this->reload();
+            });
+    }
+
     public function applyFiltersAction(): Action
     {
         return Action::make('applyFilters')
