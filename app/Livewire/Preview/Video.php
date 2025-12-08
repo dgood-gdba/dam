@@ -2,14 +2,10 @@
 
 namespace App\Livewire\Preview;
 
-use App\Filament\Resources\Assets\AssetResource;
 use App\Models\Asset;
 use App\Models\Directory;
-use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
-use Filament\Forms\Components\SpatieTagsInput;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Livewire\Attributes\On;
@@ -22,8 +18,9 @@ class Video extends Component implements HasActions, HasForms
     public ?Asset $asset;
     public ?Directory $directory;
     public $assetId;
+    public bool $selected = false;
 
-    public function mount()
+    public function mount(): void
     {
         $this->asset = Asset::findOrFail($this->assetId);
         $this->directory = $this->asset->directory;
@@ -42,12 +39,12 @@ class Video extends Component implements HasActions, HasForms
         $this->directory = $this->asset?->directory;
     }
 
-    public function render()
+    public function render(): string
     {
 
         return <<<'HTML'
         <div
-            class="w-full items-center"
+            class="w-full items-center {{$selected ? 'border' : '' }}"
             x-data="{
                 contextMenu: false,
                 menuX: 0,
@@ -65,6 +62,7 @@ class Video extends Component implements HasActions, HasForms
             @click.away="closeMenu()"
             @contextmenu.prevent.stop="openMenu($event)"
             @closeContext.window="closeMenu()"
+            class="{{$selected ? 'border' : '' }}"
         >
             <div
                 class="mx-auto p-2 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800 select-none"
@@ -72,7 +70,7 @@ class Video extends Component implements HasActions, HasForms
             >
                    <div class="mx-auto p-2 max-w-full flex flex-col items-center justify-center">
                         <video
-                            src="{{ url(\Storage::disk('public')->url($asset->path)) }}"
+                            src="{{ url($asset->preview_url) }}"
                             class="w-40 h-28 rounded bg-black object-cover"
                             preload="metadata"
                             muted
@@ -95,6 +93,8 @@ class Video extends Component implements HasActions, HasForms
                 <div class="py-1" @click="closeMenu()">
                     {{ $this->edit }}
                     {{ $this->download }}
+                    {{ $this->selectItem }}
+                    {{ $this->shareItem }}
                     {{ $this->delete }}
                 </div>
             </div>

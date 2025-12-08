@@ -2,17 +2,12 @@
 
 namespace App\Livewire\Preview;
 
-use App\Filament\Resources\Assets\AssetResource;
 use App\Models\Asset;
 use App\Models\Directory;
-use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
-use Filament\Forms\Components\SpatieTagsInput;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -23,9 +18,9 @@ class Document extends Component implements HasActions, HasForms
     public ?Asset $asset;
     public ?Directory $directory;
     public $assetId;
+    public bool $selected = false;
 
-
-    public function mount()
+    public function mount(): void
     {
         $this->asset = Asset::findOrFail($this->assetId);
         $this->directory = $this->asset->directory;
@@ -49,7 +44,7 @@ class Document extends Component implements HasActions, HasForms
 
         return <<<'HTML'
         <div
-            class="w-full items-center"
+            class="w-full items-center {{$selected ? 'border' : '' }}"
             x-data="{
                 contextMenu: false,
                 menuX: 0,
@@ -75,7 +70,7 @@ class Document extends Component implements HasActions, HasForms
 
                 {{-- Preview --}}
                     @php
-                        $url = url(\Storage::disk('public')->url($asset->path));
+                        $url = url($asset->preview_url);
                         $ext = $asset->extension;
                         $isPdf = $ext === 'pdf';
                         $isDoc = in_array($ext, ['doc', 'docx']);
@@ -135,6 +130,8 @@ class Document extends Component implements HasActions, HasForms
                 <div class="py-1" @click="closeMenu()">
                     {{ $this->edit }}
                     {{ $this->download }}
+                    {{ $this->selectItem }}
+                    {{ $this->shareItem }}
                     {{ $this->delete }}
                 </div>
             </div>

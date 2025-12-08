@@ -13,11 +13,12 @@
     ],
     "require": {
         "php": "^8.2",
+        "dgoodgdba/gdba-oidc": "4.0.0.x-dev",
         "filament/filament": "~4.0",
         "filament/spatie-laravel-tags-plugin": "~4.0",
+        "jenssegers/agent": "^2.6",
         "laravel/framework": "^12.0",
-        "laravel/tinker": "^2.10.1",
-        "dgoodgdba/gdba-oidc": "4.0.0.x-dev"
+        "laravel/tinker": "^2.10.1"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

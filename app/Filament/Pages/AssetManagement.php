@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Asset;
 use App\Models\Directory;
+use App\Services\AuditLogger;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Forms\Components\FileUpload;
@@ -50,6 +51,7 @@ class AssetManagement extends Page implements HasForms
             'to' => ''
         ],
     ];
+    public array $selectedItems = [];
 
     public ?int $directoryIdContextMenu = null;
 
@@ -195,9 +197,23 @@ class AssetManagement extends Page implements HasForms
             ]);
     }
 
+    #[On('toggleSelectedItem')]
+    public function toggleSelectedItem($item): void
+    {
+        if (isset($this->selectedItems[$item['id']])) {
+            unset($this->selectedItems[$item['id']]);
+        } else {
+            $this->selectedItems[$item['id']] = $item;
+        }
+    }
+
     #[On('refresh')]
     public function reload(): void
     {
+        //Audit Logger
+        $directory = Directory::find($this->directory);
+        AuditLogger::log($directory ? 'view_directory' : 'view_root_directory', $directory, []);
+
         $this->loadDirectoryItems();
         $this->buildBreadcrumbs();
     }
@@ -205,6 +221,7 @@ class AssetManagement extends Page implements HasForms
     #[On('openDirectory')]
     public function openDirectory(int|null $directoryId): void
     {
+        $this->selectedItems = [];
         $this->directory = $directoryId;
         $this->reload();
     }
@@ -397,7 +414,7 @@ class AssetManagement extends Page implements HasForms
             ->schema([
                 FileUpload::make('file')
                     ->preserveFilenames()
-                    ->disk('public')
+                    ->disk('private')
                     ->directory($path),
                 TextInput::make('name')
                     ->label('File Name')
@@ -411,7 +428,7 @@ class AssetManagement extends Page implements HasForms
                     $path .= $breadcrumb['name'] . DIRECTORY_SEPARATOR;
                 }
 
-                $fileData = pathinfo(\Storage::disk('public')->path($data['file']));
+                $fileData = pathinfo(\Storage::disk('private')->path($data['file']));
                 $extension = $fileData['extension'];
 
                 $updateFileName = true;
@@ -430,7 +447,7 @@ class AssetManagement extends Page implements HasForms
                 $data['name'] = $safeName;
 
                 if ($updateFileName) {
-                    $storage = Storage::disk('public');
+                    $storage = Storage::disk('private');
                     $oldPath = $data['file'];
                     $newPath = $path . $data['name'] . '.' . $extension;
                     if ($storage->exists($oldPath)) {
@@ -446,9 +463,8 @@ class AssetManagement extends Page implements HasForms
                 $asset->path = $data['file'];
 
                 // Get file information
-                //$storage = \Illuminate\Support\Facades\Storage::disk('public');
-                $asset->file_size = \Storage::disk('public')->size($data['file']);
-                $asset->mime_type = \Storage::disk('public')->mimeType($data['file']);
+                $asset->file_size = \Storage::disk('private')->size($data['file']);
+                $asset->mime_type = \Storage::disk('private')->mimeType($data['file']);
 
                 if (str_starts_with($asset->mime_type, 'image/')) {
                     $asset->file_type = 'image';
@@ -491,6 +507,18 @@ class AssetManagement extends Page implements HasForms
             });
     }
 
+    public function downloadSelectedAction(): Action
+    {
+        return Action::make('downloadSelected')
+            ->extraAttributes([
+                'class' => 'rounded-none'
+            ])
+            ->visible(count($this->selectedItems) > 0)
+            ->action(function () {
+                dd($this->selectedItems);
+            });
+    }
+
     public function uploadAssetAction(): Action
     {
         $path = '';
@@ -502,7 +530,7 @@ class AssetManagement extends Page implements HasForms
             ->schema([
                 FileUpload::make('file')
                     ->preserveFilenames()
-                    ->disk('public')
+                    ->disk('private')
                     ->directory($path),
                 TextInput::make('name')
                     ->label('File Name')
@@ -519,7 +547,7 @@ class AssetManagement extends Page implements HasForms
                     $path .= $breadcrumb['name'] . DIRECTORY_SEPARATOR;
                 }
 
-                $fileData = pathinfo(\Storage::disk('public')->path($data['file']));
+                $fileData = pathinfo(\Storage::disk('private')->path($data['file']));
                 $extension = $fileData['extension'];
 
                 $updateFileName = true;
@@ -538,7 +566,7 @@ class AssetManagement extends Page implements HasForms
                 $data['name'] = $safeName;
 
                 if ($updateFileName) {
-                    $storage = Storage::disk('public');
+                    $storage = Storage::disk('private');
                     $oldPath = $data['file'];
                     $newPath = $path . $data['name'] . '.' . $extension;
                     if ($storage->exists($oldPath)) {
@@ -554,9 +582,8 @@ class AssetManagement extends Page implements HasForms
                 $asset->path = $data['file'];
 
                 // Get file information
-                //$storage = \Illuminate\Support\Facades\Storage::disk('public');
-                $asset->file_size = \Storage::disk('public')->size($data['file']);
-                $asset->mime_type = \Storage::disk('public')->mimeType($data['file']);
+                $asset->file_size = \Storage::disk('private')->size($data['file']);
+                $asset->mime_type = \Storage::disk('private')->mimeType($data['file']);
 
                 if (str_starts_with($asset->mime_type, 'image/')) {
                     $asset->file_type = 'image';
@@ -588,7 +615,7 @@ class AssetManagement extends Page implements HasForms
             ->schema([
                 FileUpload::make('file')
                     ->preserveFilenames()
-                    ->disk('public')
+                    ->disk('private')
                     ->multiple()
                     ->directory($path),
             ])
@@ -605,7 +632,7 @@ class AssetManagement extends Page implements HasForms
                 }
 
                 foreach ($data['file'] as $file) {
-                    $fileData = pathinfo(\Storage::disk('public')->path($file));
+                    $fileData = pathinfo(\Storage::disk('private')->path($file));
 
                     $safeName = $fileData['filename'];
                     $fileName = $fileData['filename'];
@@ -626,9 +653,8 @@ class AssetManagement extends Page implements HasForms
                     $asset->path = $file;
 
                     // Get file information
-                    //$storage = \Illuminate\Support\Facades\Storage::disk('public');
-                    $asset->file_size = \Storage::disk('public')->size($file);
-                    $asset->mime_type = \Storage::disk('public')->mimeType($file);
+                    $asset->file_size = \Storage::disk('private')->size($file);
+                    $asset->mime_type = \Storage::disk('private')->mimeType($file);
 
                     if (str_starts_with($asset->mime_type, 'image/')) {
                         $asset->file_type = 'image';

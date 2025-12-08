@@ -52,6 +52,9 @@
                 <div class="flex">
 
                     {{ $this->topMakeDirectory }}
+                    @if( $this->downloadSelected->isVisible())
+                        {{ $this->downloadSelected }}
+                    @endif
                     {{ $this->massUploadAction }}
                     {{ $this->topUploadAsset }}
                     <div>&nbsp;&nbsp;&nbsp;</div>
@@ -114,18 +117,21 @@
                             <livewire:preview.image
                                 :asset-id="$item['id']"
                                 :key="'image-' . $item['id'] . '-' . time()"
+                                :selected="isset($this->selectedItems[$item['id']])"
                             />
                             @break
                         @case('document')
                             <livewire:preview.document
                                 :asset-id="$item['id']"
                                 :key="'document-' . $item['id'] . '-' . time()"
+                                :selected="isset($this->selectedItems[$item['id']])"
                             />
                             @break
                         @case('video')
                             <livewire:preview.video
                                 :asset-id="$item['id']"
                                 :key="'document-' . $item['id'] . '-' . time()"
+                                :selected="isset($this->selectedItems[$item['id']])"
                             />
                             @break
                         @default

@@ -10,7 +10,12 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
+use Filament\Support\Icons\Heroicon;
 use Livewire\Component;
+use ZipArchive;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Support\Str;
 
 class Directory extends Component implements HasActions, HasForms
 {
@@ -63,6 +68,53 @@ class Directory extends Component implements HasActions, HasForms
             });
     }
 
+    public function downloadAction(): Action
+    {
+        return Action::make('download')
+            ->label('Download')
+            ->extraAttributes([
+                'class' => 'w-full rounded-none text-left ',
+                'download' => $this->directory->name . '.zip'
+            ])
+            ->icon(Heroicon::CloudArrowDown)
+            ->action(function () {
+                // Ensure temp directory exists
+                $local = Storage::disk('local'); // storage/app
+                $local->makeDirectory('temp');
+
+                // Create a safe file name and path
+                $fileName = Str::slug($this->directory->name) . '-' . now()->format('Ymd-His') . '.zip';
+                $zipFilePath = $local->path('temp/' . $fileName);
+
+                $zip = new \ZipArchive();
+                $openResult = $zip->open($zipFilePath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+                if ($openResult !== true) {
+                    // Map error codes if you want more detail; for now, notify the user
+                    Notification::make()
+                        ->title('Failed to create ZIP')
+                        ->danger()
+                        ->body('Could not open ZIP archive for writing (code: ' . $openResult . ').')
+                        ->send();
+                    return null;
+                }
+
+                $private = Storage::disk('private');
+                foreach ($this->directory->assets as $asset) {
+                    $storagePath = $asset->path; // relative in the 'private' disk
+                    if ($private->exists($storagePath)) {
+                        $downloadName = $asset->file_name . '.' . $asset->extension; // add extension!
+                        $zip->addFile($private->path($storagePath), $downloadName);
+                    }
+                }
+
+                $zip->close();
+
+                // Stream download and delete temp file after sending
+                return response()->download($zipFilePath, $this->directory->name . '.zip')
+                    ->deleteFileAfterSend();
+            });
+    }
+
     public function render(): string
     {
         return <<<'HTML'
@@ -109,6 +161,7 @@ class Directory extends Component implements HasActions, HasForms
                 <div class="py-1" @click="closeMenu()">
                     {{ $this->rename }}
                     {{ $this->delete }}
+                    {{ $this->download }}
                 </div>
             </div>
 

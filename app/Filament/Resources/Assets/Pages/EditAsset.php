@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Assets\Pages;
 
 use App\Filament\Pages\AssetManagement;
 use App\Filament\Resources\Assets\AssetResource;
+use App\Services\AuditLogger;
 use Filament\Actions\Action;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
@@ -12,6 +13,18 @@ use Storage;
 class EditAsset extends EditRecord
 {
     protected static string $resource = AssetResource::class;
+
+    public function mount(int|string $record): void
+    {
+        $this->record = $this->resolveRecord($record);
+
+        $this->authorizeAccess();
+
+        $this->fillForm();
+
+        $this->previousUrl = url()->previous();
+        AuditLogger::log('edit_asset', $this->getRecord(), []);
+    }
 
     protected function getHeaderActions(): array
     {

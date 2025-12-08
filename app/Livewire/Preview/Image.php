@@ -22,10 +22,9 @@ class Image extends Component implements HasActions, HasForms
     public ?Asset $asset;
     public ?Directory $directory;
     public $assetId;
+    public bool $selected = false;
 
-
-
-    public function mount()
+    public function mount(): void
     {
         $this->asset = Asset::findOrFail($this->assetId);
         $this->directory = $this->asset->directory;
@@ -69,11 +68,11 @@ class Image extends Component implements HasActions, HasForms
             @closeContext.window="closeMenu()"
         >
             <div
-                class="mx-auto p-2 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800 select-none"
+                class=" {{$selected ? 'border' : '' }} mx-auto p-2 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800 select-none"
                 wire:click="dispatchSelf('editFile')"
             >
                 <img
-                    src="{{ url(\Storage::disk('public')->url($asset->path)) }}"
+                    src="{{ url($asset->preview_url) }}"
                     alt="{{ $asset->file_name}}"
                     class="mx-auto p-2 max-w-full"
                 ><br>
@@ -91,6 +90,8 @@ class Image extends Component implements HasActions, HasForms
                 <div class="py-1" @click="closeMenu()">
                     {{ $this->edit }}
                     {{ $this->download }}
+                    {{ $this->selectItem }}
+                    {{ $this->shareItem }}
                     {{ $this->delete }}
                 </div>
             </div>

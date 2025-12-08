@@ -21,9 +21,9 @@ class AssetInfolist
                     ->state(function ($record) {
                         switch ($record->file_type) {
                             case 'image':
-                                return new HtmlString('<img src="' . url(\Storage::disk('public')->url($record->path)) . '"/>');
+                                return new HtmlString('<img src="' . url($record->preview_url) . '"/>');
                             case 'document':
-                                $url = url(\Storage::disk('public')->url($record->path));
+                                $url = url($record->preview_url);
                                 $ext = $record->extension;
                                 $isPdf = $ext === 'pdf';
                                 $isDoc = in_array($ext, ['doc', 'docx']);
@@ -65,7 +65,7 @@ class AssetInfolist
                                 </div>');
                                 break;
                             case 'video':
-                                $url = url(\Storage::disk('public')->url($record->path));
+                                $url = url($record->preview_url);
                                 return new HtmlString('<div class="mx-auto p-2 max-w-full flex flex-col items-center justify-center">
                                     <video
                                         src="' . $url . '"
@@ -80,7 +80,7 @@ class AssetInfolist
                             default:
                                 return new HtmlString('<div class="items-center">No Preview<br>' . $record->file_type . '</div>');
                         }
-                        return new HtmlString('<img src="' . url(\Storage::disk('public')->url($record->path)) . '"/>');
+                        return new HtmlString('<img src="' . url($record->preview_url) . '"/>');
                     }),
                 Group::make([
                     TextEntry::make('file_name'),

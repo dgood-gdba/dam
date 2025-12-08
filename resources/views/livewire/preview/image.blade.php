@@ -24,7 +24,7 @@
         wire:click="dispatchSelf('editFile')"
     >
         <img
-            src="{{ url(\Storage::disk('public')->url($asset->path)) }}"
+            src="{{ url($asset->preview_url) }}"
             alt="{{ $asset->file_name}}"
             class="mx-auto p-2 max-w-full"
         ><br>
