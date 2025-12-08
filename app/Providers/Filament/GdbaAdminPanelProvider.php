@@ -28,7 +28,7 @@ class GdbaAdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('gdba-admin')
-            ->path('gdba-admin')
+            ->path('/')
             ->login()
             ->colors([
                 'primary' => Color::Amber,
