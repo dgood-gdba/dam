@@ -29,6 +29,7 @@ class AuditsTable
                             case 'view_root_directory':
                                 return 'Root Directory';
                             case 'updated_directory':
+                            case 'created_directory':
                             case 'view_directory':
                                 if ($record->subject_type) {
                                     return $record->subject->name;
