@@ -13,15 +13,18 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\GridDirection;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
+use ZipArchive;
 
 class AssetManagement extends Page implements HasForms
 {
@@ -516,7 +519,42 @@ class AssetManagement extends Page implements HasForms
             ])
             ->visible(count($this->selectedItems) > 0)
             ->action(function () {
-                dd($this->selectedItems);
+                // Ensure temp directory exists
+                $local = Storage::disk('local'); // storage/app
+                $local->makeDirectory('temp');
+
+                // Create a safe file name and path
+                $fileName = Str::slug(Str::random(10)) . '-' . now()->format('Ymd-His') . '.zip';
+                $zipFilePath = $local->path('temp/' . $fileName);
+
+                $zip = new ZipArchive();
+                $openResult = $zip->open($zipFilePath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+
+                if ($openResult !== true) {
+                    // Map error codes if you want more detail; for now, notify the user
+                    Notification::make()
+                        ->title('Failed to create ZIP')
+                        ->danger()
+                        ->body('Could not open ZIP archive for writing (code: ' . $openResult . ').')
+                        ->send();
+                    return null;
+                }
+
+                $private = Storage::disk('private');
+                foreach ($this->selectedItems as $item) {
+                    $asset = Asset::find($item['id']);
+                    $storagePath = $asset->path; // relative in the 'private' disk
+                    if ($private->exists($storagePath)) {
+                        $downloadName = $asset->file_name . '.' . $asset->extension; // add extension!
+                        $zip->addFile($private->path($storagePath), $downloadName);
+                    }
+                }
+
+                $zip->close();
+
+                // Stream download and delete temp file after sending
+                return response()->download($zipFilePath, Str::random(15) . '.zip')
+                    ->deleteFileAfterSend();
             });
     }
 
