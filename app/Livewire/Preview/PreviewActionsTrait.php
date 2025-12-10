@@ -3,11 +3,13 @@
 namespace App\Livewire\Preview;
 
 use App\Filament\Resources\Assets\AssetResource;
+use App\Services\AuditLogger;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Forms\Components\SpatieTagsInput;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\URL;
 use Livewire\Attributes\On;
@@ -25,36 +27,20 @@ trait PreviewActionsTrait
     public function editAction(): Action
     {
         return Action::make('edit')
-            ->label('Quick Edit Asset')
+            ->label('Quick Edit')
+            ->icon(Heroicon::Pencil)
             ->schema([
                 TextInput::make('name')
                     ->label('File Name'),
                 SpatieTagsInput::make('tags'),
             ])
             ->extraAttributes([
-                'class' => 'w-full rounded-none text-black dark:text-white bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-800 text-left '
+                'class' => 'w-full rounded-none outline-0 outline-none ring-0 box-shadow-none shadow-none',
             ])
+            ->outlined()
+            ->color('edit')
             ->action(function ($data) {
                 dd($data);
-            });
-    }
-
-    public function deleteAction(): Action
-    {
-        return Action::make('delete')
-            ->label('Delete Image')
-            ->requiresConfirmation()
-            ->extraAttributes([
-                'class' => 'w-full rounded-none text-left '
-            ])
-            ->color('danger')
-            ->action(function () {
-                //We need to load this somehow now...
-
-                \Storage::disk('private')->delete($this->asset->path);
-                $this->asset->delete();
-
-                $this->dispatch('refresh');
             });
     }
 
@@ -63,9 +49,12 @@ trait PreviewActionsTrait
         return Action::make('download')
             ->label('Download')
             ->extraAttributes([
-                'class' => 'w-full rounded-none text-left ',
-                'download' => $this->asset->file_name . '.' . $this->asset->extension
+                'class' => 'w-full rounded-none outline-0 outline-none ring-0 box-shadow-none shadow-none',
+                'download' => $this->asset->file_name . '.' . $this->asset->extension,
             ])
+            ->icon(Heroicon::CloudArrowDown)
+            ->color('download')
+            ->outlined()
             ->url(function () {
                 return url($this->asset->preview_url);
             });
@@ -78,9 +67,11 @@ trait PreviewActionsTrait
                 return $this->selected ? 'Deselect' : 'Select';
             })
             ->extraAttributes([
-                'class' => 'w-full rounded-none text-left '
+                'class' => 'w-full rounded-none outline-0 outline-none ring-0 box-shadow-none shadow-none',
             ])
-            ->color('success')
+            ->color('select')
+            ->outlined()
+            ->icon(Heroicon::Square3Stack3d)
             ->action(function () {
                 $this->selected = !$this->selected;
                 $this->dispatch('toggleSelectedItem', $this->asset);
@@ -92,9 +83,11 @@ trait PreviewActionsTrait
         return Action::make('shareItem')
             ->label('Share')
             ->extraAttributes([
-                'class' => 'w-full rounded-none text-left '
+                'class' => 'w-full rounded-none outline-0 outline-none ring-0 box-shadow-none shadow-none',
             ])
-            ->color('success')
+            ->color('share')
+            ->outlined()
+            ->icon(Heroicon::Link)
             ->action(function () {
                 $url = URL::temporarySignedRoute(
                     'share.asset',
@@ -104,6 +97,7 @@ trait PreviewActionsTrait
 
                 $this->js('navigator.clipboard.writeText("' . $url . '");console.log("Copied!");');
 
+                AuditLogger::log('shared_asset', $this->asset, ['asset' => $this->asset]);
 
                 Notification::make()
                     ->title('Shareable Link')
@@ -114,4 +108,24 @@ trait PreviewActionsTrait
             });
     }
 
+    public function deleteAction(): Action
+    {
+        return Action::make('delete')
+            ->label('Delete Image')
+            ->requiresConfirmation()
+            ->extraAttributes([
+                'class' => 'w-full rounded-none outline-0 outline-none ring-0 box-shadow-none shadow-none',
+            ])
+            ->color('delete')
+            ->outlined()
+            ->icon(Heroicon::Trash)
+            ->action(function () {
+                //We need to load this somehow now...
+
+                \Storage::disk('private')->delete($this->asset->path);
+                $this->asset->delete();
+
+                $this->dispatch('refresh');
+            });
+    }
 }

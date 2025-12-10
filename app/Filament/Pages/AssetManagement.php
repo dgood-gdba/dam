@@ -17,6 +17,7 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\GridDirection;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
@@ -622,6 +623,7 @@ class AssetManagement extends Page implements HasForms
             ->extraAttributes([
                 'class' => 'rounded-none'
             ])
+            ->icon(Heroicon::ChevronDoubleUp)
             ->color('secondary')
             ->action(function ($data, \Filament\Actions\Action $action) {
                 $path = '';

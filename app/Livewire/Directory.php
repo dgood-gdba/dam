@@ -33,8 +33,11 @@ class Directory extends Component implements HasActions, HasForms
     {
         return Action::make('rename')
             ->extraAttributes([
-                'class' => 'w-full rounded-none text-black dark:text-white bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-800 text-left '
+                'class' => 'w-full rounded-none outline-0 outline-none ring-0 box-shadow-none shadow-none',
             ])
+            ->color('edit')
+            ->outlined()
+            ->icon(Heroicon::Pencil)
             ->label('Rename Directory')
             ->schema([
                 TextInput::make('name')
@@ -49,34 +52,17 @@ class Directory extends Component implements HasActions, HasForms
             });
     }
 
-    public function deleteAction(): Action
-    {
-        return Action::make('delete')
-            ->label('Delete Directory')
-            ->requiresConfirmation()
-            ->extraAttributes([
-                'class' => 'w-full rounded-none text-left '
-            ])
-            ->color('danger')
-            ->action(function () {
-                $this->directory->delete();
-                $this->dispatch('refresh');
-                Notification::make()
-                    ->title('Directory Deleted')
-                    ->success()
-                    ->send();
-            });
-    }
-
     public function downloadAction(): Action
     {
         return Action::make('download')
             ->label('Download')
             ->extraAttributes([
-                'class' => 'w-full rounded-none text-left ',
+                'class' => 'w-full rounded-none outline-0 outline-none ring-0 box-shadow-none shadow-none',
                 'download' => $this->directory->name . '.zip'
             ])
             ->icon(Heroicon::CloudArrowDown)
+            ->color('download')
+            ->outlined()
             ->action(function () {
                 // Ensure temp directory exists
                 $local = Storage::disk('local'); // storage/app
@@ -114,6 +100,29 @@ class Directory extends Component implements HasActions, HasForms
                     ->deleteFileAfterSend();
             });
     }
+
+
+    public function deleteAction(): Action
+    {
+        return Action::make('delete')
+            ->label('Delete Directory')
+            ->requiresConfirmation()
+            ->extraAttributes([
+                'class' => 'w-full rounded-none outline-0 outline-none ring-0 box-shadow-none shadow-none',
+            ])
+            ->color('delete')
+            ->outlined()
+            ->icon(Heroicon::Trash)
+            ->action(function () {
+                $this->directory->delete();
+                $this->dispatch('refresh');
+                Notification::make()
+                    ->title('Directory Deleted')
+                    ->success()
+                    ->send();
+            });
+    }
+
 
     public function render(): string
     {
@@ -160,8 +169,8 @@ class Directory extends Component implements HasActions, HasForms
             >
                 <div class="py-1" @click="closeMenu()">
                     {{ $this->rename }}
-                    {{ $this->delete }}
                     {{ $this->download }}
+                    {{ $this->delete }}
                 </div>
             </div>
 
