@@ -39,6 +39,8 @@ class AuditsTable
                             case 'edit_asset':
                             case 'updated_asset':
                             case 'created_asset':
+                            case 'shared_asset':
+                            case 'downloaded_asset':
                                 if ($record->subject_type) {
                                     return $record->subject->file_name;
                                 }
