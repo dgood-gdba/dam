@@ -91,7 +91,7 @@ trait PreviewActionsTrait
             ->action(function () {
                 $url = URL::temporarySignedRoute(
                     'share.asset',
-                    Carbon::now()->addMinutes(15), // expires in 15 minutes
+                    Carbon::now()->addDays(30),
                     ['asset' => $this->asset->id]
                 );
 

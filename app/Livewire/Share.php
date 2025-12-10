@@ -8,7 +8,6 @@ use Livewire\Component;
 
 class Share extends Component
 {
-
     public Asset $asset;
 
     public function preview(): string
