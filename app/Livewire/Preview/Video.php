@@ -44,7 +44,7 @@ class Video extends Component implements HasActions, HasForms
 
         return <<<'HTML'
         <div
-            class="w-full items-center {{$selected ? 'border' : '' }}"
+            class="w-full items-center"
             x-data="{
                 contextMenu: false,
                 menuX: 0,

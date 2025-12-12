@@ -106,40 +106,39 @@
 
             <div class="grid grid-cols-8 gap-4 items-center justify-items-center">
                 @forelse($this->records as $item)
-                    @switch($item['file_type'])
-                        @case('directory')
-                            <livewire:directory
-                                :directory-id="$item['id']"
-                                :key="'directory-' . $item['id']"
-                            />
-                            @break
-                        @case('image')
-                            <livewire:preview.image
-                                :asset-id="$item['id']"
-                                :key="'image-' . $item['id'] . '-' . time()"
-                                :selected="isset($this->selectedItems[$item['id']])"
-                            />
-                            @break
-                        @case('document')
-                            <livewire:preview.document
-                                :asset-id="$item['id']"
-                                :key="'document-' . $item['id'] . '-' . time()"
-                                :selected="isset($this->selectedItems[$item['id']])"
-                            />
-                            @break
-                        @case('video')
-                            <livewire:preview.video
-                                :asset-id="$item['id']"
-                                :key="'document-' . $item['id'] . '-' . time()"
-                                :selected="isset($this->selectedItems[$item['id']])"
-                            />
-                            @break
-                        @default
-                            <div class="items-center">
-                                {{ $item['file_name'] }} - {{ $item['file_type'] }}
-                            </div>
-                            @break
-                    @endswitch
+                    <div class="{{isset($this->selectedItems[$item['id']]) ? 'border' : ''}}">
+                        @switch($item['file_type'])
+                            @case('directory')
+                                <livewire:directory
+                                    :directory-id="$item['id']"
+                                    :key="'directory-' . $item['id']"
+                                />
+                                @break
+                            @case('image')
+                                <livewire:preview.image
+                                    :asset-id="$item['id']"
+                                    :key="'image-' . $item['id']"
+                                />
+                                @break
+                            @case('document')
+                                <livewire:preview.document
+                                    :asset-id="$item['id']"
+                                    :key="'document-' . $item['id']"
+                                />
+                                @break
+                            @case('video')
+                                <livewire:preview.video
+                                    :asset-id="$item['id']"
+                                    :key="'document-' . $item['id']"
+                                />
+                                @break
+                            @default
+                                <div class="items-center">
+                                    {{ $item['file_name'] }} - {{ $item['file_type'] }}
+                                </div>
+                                @break
+                        @endswitch
+                    </div>
                 @empty
                     <div class="col-span-full text-center text-2xl mt-8">No Items In This Directory</div>
                 @endforelse

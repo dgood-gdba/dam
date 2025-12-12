@@ -68,7 +68,7 @@ class Image extends Component implements HasActions, HasForms
             @closeContext.window="closeMenu()"
         >
             <div
-                class=" {{$selected ? 'border' : '' }} mx-auto p-2 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800 select-none"
+                class=" mx-auto p-2 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800 select-none"
                 x-on:click.prevent.stop="
                     if ($event.ctrlKey) {
                         $wire.dispatchSelf('processSelect')
