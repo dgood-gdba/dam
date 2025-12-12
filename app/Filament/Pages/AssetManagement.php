@@ -217,7 +217,7 @@ class AssetManagement extends Page implements HasForms
         $directory = Directory::find($this->directory);
         AuditLogger::log($directory ? 'view_directory' : 'view_root_directory', $directory, []);
 
-        $this->loadDirectoryItems();
+        //$this->loadDirectoryItems();
         $this->buildBreadcrumbs();
     }
 
@@ -229,6 +229,20 @@ class AssetManagement extends Page implements HasForms
         $this->reload();
     }
 
+    public function assetFilterQuery($query, $filters)
+    {
+        return $query
+            ->when(!empty($filters['file_name']), function ($query) use ($filters) {
+                $query->where('file_name', 'like', '%' . $filters['file_name'] . '%');
+            })
+            ->when(!empty($filters['extension']), function ($query) use ($filters) {
+                $query->where('extension', $filters['extension']);
+            })
+            ->when(!empty($filters['tags']), function ($query) use ($filters) {
+                $query->withAnyTagsOfAnyType($filters['tags']);
+            });
+    }
+
     protected function loadDirectoryItems(): void
     {
         $filters = $this->form->getState();
@@ -237,44 +251,19 @@ class AssetManagement extends Page implements HasForms
         $directories = Directory::query()
             ->where('parent_id', $this->directory)
             ->orderBy('name')
+            ->when($this->hasFilters(), function ($query) use ($filters) {
+                $query->whereHas('assets', function ($query) use ($filters) {
+                    return $this->assetFilterQuery($query, $filters);
+                });
+            })
             ->get();
 
         $directories->each(function ($directory) {
             $directory->file_type = 'directory';
         });
 
-        $assets = Asset::query()
+        $assets = $this->assetFilterQuery(Asset::query(), $filters)
             ->where('directory_id', $this->directory)
-            ->when(!empty($filters['file_name']), function ($query) use ($filters) {
-                $query->where('file_name', 'like', '%' . $filters['file_name'] . '%');
-            })
-            ->when(!empty($filters['property_name']), function ($query) use ($filters) {
-                $query->whereHas('properties', function ($query) use ($filters) {
-                    $query->where('name', $filters['property_name']);
-                    if (!empty($filters['property_value'])) {
-                        $query->where('value', $filters['property_value']);
-                    }
-                });
-
-            })
-            ->when(!empty($filters['extension']), function ($query) use ($filters) {
-                $query->where('extension', $filters['extension']);
-            })
-            ->when(!empty($filters['tags']), function ($query) use ($filters) {
-                $query->withAnyTagsOfAnyType($filters['tags']);
-            })
-//            ->when(!empty($filters['created_at']['from']), function ($query) use ($filters) {
-//                $query->whereBetween('created_at', [
-//                    $filters['created_at']['from'],
-//                    $filters['created_at']['to']
-//                ]);
-//            })
-//            ->when(!empty($filters['updated_at']['from']), function ($query) use ($filters) {
-//                $query->whereBetween('updated_at', [
-//                    $filters['updated_at']['from'],
-//                    $filters['updated_at']['to']
-//                ]);
-//            })
             ->orderBy('file_name')
             ->get();
 
@@ -300,44 +289,19 @@ class AssetManagement extends Page implements HasForms
         $directories = Directory::query()
             ->where('parent_id', $this->directory)
             ->orderBy('name')
+            ->when($this->hasFilters(), function ($query) use ($filters) {
+                $query->whereHas('assets', function ($query) use ($filters) {
+                    return $this->assetFilterQuery($query, $filters);
+                });
+            })
             ->get();
 
         $directories->each(function ($directory) {
             $directory->file_type = 'directory';
         });
 
-        $assets = Asset::query()
+        $assets = $this->assetFilterQuery(Asset::query(), $filters)
             ->where('directory_id', $this->directory)
-            ->when(!empty($filters['file_name']), function ($query) use ($filters) {
-                $query->where('file_name', 'like', '%' . $filters['file_name'] . '%');
-            })
-            ->when(!empty($filters['property_name']), function ($query) use ($filters) {
-                $query->whereHas('properties', function ($query) use ($filters) {
-                    $query->where('name', $filters['property_name']);
-                    if (!empty($filters['property_value'])) {
-                        $query->where('value', $filters['property_value']);
-                    }
-                });
-
-            })
-            ->when(!empty($filters['extension']), function ($query) use ($filters) {
-                $query->where('extension', $filters['extension']);
-            })
-            ->when(!empty($filters['tags']), function ($query) use ($filters) {
-                $query->withAnyTagsOfAnyType($filters['tags']);
-            })
-//            ->when(!empty($filters['created_at']['from']), function ($query) use ($filters) {
-//                $query->whereBetween('created_at', [
-//                    $filters['created_at']['from'],
-//                    $filters['created_at']['to']
-//                ]);
-//            })
-//            ->when(!empty($filters['updated_at']['from']), function ($query) use ($filters) {
-//                $query->whereBetween('updated_at', [
-//                    $filters['updated_at']['from'],
-//                    $filters['updated_at']['to']
-//                ]);
-//            })
             ->orderBy('file_name')
             ->get();
 
@@ -516,6 +480,8 @@ class AssetManagement extends Page implements HasForms
             ->extraAttributes([
                 'class' => 'rounded-none'
             ])
+            ->icon(Heroicon::ChevronDoubleDown)
+            ->color('download')
             ->visible(count($this->selectedItems) > 0)
             ->action(function () {
                 // Ensure temp directory exists
@@ -556,6 +522,46 @@ class AssetManagement extends Page implements HasForms
                     ->deleteFileAfterSend();
             });
     }
+
+    public function editSelectedAction(): Action
+    {
+        return Action::make('editSelected')
+            ->label('Edit Tags')
+            ->icon('heroicon-o-pencil')
+            ->color('edit')
+            ->extraAttributes([
+                'class' => 'rounded-none'
+            ])
+            ->visible(count($this->selectedItems) > 0)
+            ->schema([
+                TagsInput::make('tags')->label('Tags')
+            ])
+            ->mountUsing(function ($form) {
+                $tags = [];
+                foreach($this->selectedItems as $item) {
+                    $asset = Asset::find($item['id']);
+                    foreach($asset->tags->pluck('name')->all() as $tagName){
+                        if(!in_array($tagName, $tags)){
+                            $tags[] = $tagName;
+                        }
+                    }
+                }
+                $form->fill(['tags' => $tags]);
+            })
+            ->action(function ($data) {
+                foreach($this->selectedItems as $item) {
+                    $asset = Asset::find($item['id']);
+                    $asset->syncTags($data['tags']);
+                }
+
+                Notification::make()
+                    ->title('Tags Updated')
+                    ->success()
+                    ->body('Tags updated successfully.')
+                    ->send();
+            });
+    }
+
 
     public function uploadAssetAction(): Action
     {

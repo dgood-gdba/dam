@@ -55,6 +55,9 @@
                     @if( $this->downloadSelected->isVisible())
                         {{ $this->downloadSelected }}
                     @endif
+                    @if( $this->editSelected->isVisible())
+                        {{ $this->editSelected }}
+                    @endif
                     {{ $this->massUploadAction }}
                     {{ $this->topUploadAsset }}
                     <div>&nbsp;&nbsp;&nbsp;</div>
@@ -106,7 +109,7 @@
 
             <div class="grid grid-cols-8 gap-4 items-center justify-items-center">
                 @forelse($this->records as $item)
-                    <div class="{{isset($this->selectedItems[$item['id']]) ? 'border' : ''}}">
+                    <div class="max-w-full {{isset($this->selectedItems[$item['id']]) ? 'border' : ''}}">
                         @switch($item['file_type'])
                             @case('directory')
                                 <livewire:directory
