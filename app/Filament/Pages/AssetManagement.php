@@ -9,6 +9,7 @@ use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\SpatieTagsInput;
+use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -71,8 +72,6 @@ class AssetManagement extends Page implements HasForms
             ->schema([
                 TextInput::make('file_name'),
                 SpatieTagsInput::make('tags')->dehydrated(true),
-                TextInput::make('property_name'),
-                TextInput::make('property_value'),
                 TextInput::make('extension'),
                 Group::make([
                     ToggleButtons::make('created_at_window')
@@ -657,6 +656,7 @@ class AssetManagement extends Page implements HasForms
                     ->disk('private')
                     ->multiple()
                     ->directory($path),
+                TagsInput::make('tags')->label('Tags')
             ])
             ->extraAttributes([
                 'class' => 'rounded-none'
@@ -665,7 +665,6 @@ class AssetManagement extends Page implements HasForms
             ->color('secondary')
             ->action(function ($data, \Filament\Actions\Action $action) {
                 $path = '';
-
 
                 foreach ($this->breadcrumbs as $breadcrumb) {
                     $path .= $breadcrumb['name'] . DIRECTORY_SEPARATOR;
@@ -706,6 +705,8 @@ class AssetManagement extends Page implements HasForms
                         $asset->file_type = 'document';
                     }
                     $asset->save();
+
+                    $asset->attachTags($data['tags']);
                 }
 
                 //Emit event to close context menu

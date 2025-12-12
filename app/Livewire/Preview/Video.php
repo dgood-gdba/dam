@@ -66,7 +66,13 @@ class Video extends Component implements HasActions, HasForms
         >
             <div
                 class="mx-auto p-2 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800 select-none"
-                wire:click="dispatchSelf('editFile')"
+                x-on:click.prevent.stop="
+                    if ($event.ctrlKey) {
+                        $wire.dispatchSelf('processSelect')
+                        return
+                    }
+                    $wire.dispatchSelf('editFile')
+                "
             >
                    <div class="mx-auto p-2 max-w-full flex flex-col items-center justify-center">
                         <video

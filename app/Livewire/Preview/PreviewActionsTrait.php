@@ -78,6 +78,13 @@ trait PreviewActionsTrait
             });
     }
 
+    #[On('processSelect')]
+    public function processSelect(): void
+    {
+        $this->selected = !$this->selected;
+        $this->dispatch('toggleSelectedItem', $this->asset);
+    }
+
     public function shareItemAction(): Action
     {
         return Action::make('shareItem')

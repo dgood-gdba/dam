@@ -69,7 +69,13 @@ class Image extends Component implements HasActions, HasForms
         >
             <div
                 class=" {{$selected ? 'border' : '' }} mx-auto p-2 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800 select-none"
-                wire:click="dispatchSelf('editFile')"
+                x-on:click.prevent.stop="
+                    if ($event.ctrlKey) {
+                        $wire.dispatchSelf('processSelect')
+                        return
+                    }
+                    $wire.dispatchSelf('editFile')
+                "
             >
                 <img
                     src="{{ url($asset->preview_url) }}"
