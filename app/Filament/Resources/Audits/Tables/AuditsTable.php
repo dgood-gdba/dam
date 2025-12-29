@@ -31,8 +31,8 @@ class AuditsTable
                             case 'updated_directory':
                             case 'created_directory':
                             case 'view_directory':
-                                if ($record->subject_type) {
-                                    return $record->subject->name;
+                                if ($record->subject_type && $record->subject ) {
+                                    return $record->subject?->name ?? 'Unknown Directory';
                                 }
                                 return 'Unknown Directory';
                             case 'view_asset':
@@ -41,8 +41,8 @@ class AuditsTable
                             case 'created_asset':
                             case 'shared_asset':
                             case 'downloaded_asset':
-                                if ($record->subject_type) {
-                                    return $record->subject->file_name;
+                                if ($record->subject_type && $record->subject ) {
+                                    return $record->subject->file_name ?? 'Unknown Asset';
                                 }
                                 return 'Unknown Asset';
                             case 'deleted_asset':
